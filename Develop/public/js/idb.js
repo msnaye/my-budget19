@@ -1,3 +1,5 @@
+const indexedDB = window.indexedDB;
+
 // create variable to hold db connection
 let db;
 // establish a connection to IndexedDB database called 'pizza_hunt' and set it to version 1
@@ -37,9 +39,39 @@ function saveRecord(record) {
     // add record to your store with add method
     transactionObjectStore.add(record);
   }
-  .catch(err => {
-    console.log(err);
-    saveRecord(formData);
+
+  function uploadItem() {
+    const transaction = db.transaction(["new_transaction"], "readwrite");
+    const itemObjectStore = transaction.objectStore("new_transaction");
   
-  });
+    const getAll = itemObjectStore.getAll();
+  
+    getAll.onsuccess = function () {
+      if (getAll.result.length > 0) {
+        fetch("/api/transaction", {
+          method: "POST",
+          body: JSON.stringify(getAll.result),
+          headers: {
+            Accept: "application/json, text/plain, */*",
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.json())
+          .then((serverResponse) => {
+            if (serverResponse.message) {
+              throw new Error(serverResponse);
+            }
+            const transaction = db.transaction(["new_transaction"], "readwrite");
+            const itemObjectStore = transaction.objectStore("new_transaction");
+            itemObjectStore.clear();
+            alert("All transactions submitted");
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      }
+    };
+  }
+  
+  window.addEventListener("online", uploadItem);
 
