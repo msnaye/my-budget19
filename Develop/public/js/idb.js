@@ -37,3 +37,9 @@ function saveRecord(record) {
     // add record to your store with add method
     transactionObjectStore.add(record);
   }
+  .catch(err => {
+    console.log(err);
+    saveRecord(formData);
+  
+  });
+
